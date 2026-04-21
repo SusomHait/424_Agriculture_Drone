@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -14,6 +16,12 @@ public class BeginnerDroneController : MonoBehaviour
     public float max_tilt_deg = 25f;
     public float tilt_smoothing_factor = 5f;
 
+    public List<Transform> waypoints = new List<Transform>();
+    public float waypoint_tolerance = 1.5f;
+    public float xz_tolerance = 0.5f;
+    public float y_tolerance = 0.5f;
+    public bool loop_waypoints = true;
+
     private Rigidbody rb;
 
     private Vector3 target_vel;
@@ -26,6 +34,11 @@ public class BeginnerDroneController : MonoBehaviour
 
     private float rotation_angle;
 
+    private int current_waypoint_index = 0;
+
+    private int flight_mode;
+    private int image_capture_mode;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -34,6 +47,9 @@ public class BeginnerDroneController : MonoBehaviour
 
         rotation_angle = transform.eulerAngles.y; // get the current yaw
         target_rotation = rb.rotation; // store the current rotation 
+
+        flight_mode = PlayerPrefs.GetInt("FlightMode", 0);
+        image_capture_mode = PlayerPrefs.GetInt("ImageCaptureMode", 0);
     }
 
     private void HandleInputs()
@@ -70,6 +86,65 @@ public class BeginnerDroneController : MonoBehaviour
             rotation_input = 1f;
     }
 
+    private void HandleWaypoint()
+    {
+        Transform target = waypoints[current_waypoint_index]; 
+        Vector3 toTarget = target.position - transform.position; 
+
+        // get the simulated vertical input
+        float verticalDistToTarget = toTarget.y;
+        if (Mathf.Abs(verticalDistToTarget) > y_tolerance)
+        {
+            UD_input = Mathf.Clamp(verticalDistToTarget, -1f, 1f);
+        } else
+        {
+            UD_input = 0;
+        }
+
+        // now try to get the drone to the right place in the xy field
+        Vector3 xzTargetVec = new Vector3(toTarget.x, 0f, toTarget.z);
+        float lineDist = xzTargetVec.magnitude;
+
+        // if we aren't close enough do some math to get there
+        if (lineDist > xz_tolerance)
+        {
+            xzTargetVec.Normalize(); 
+
+            float targetRot = Mathf.Atan2(xzTargetVec.x, xzTargetVec.z) * Mathf.Rad2Deg; // get the angle to the target vector
+            float angleToTarget = Mathf.DeltaAngle(rotation_angle, targetRot); // get the degrees needed to turn from the current angle to reach the new one
+        
+            rotation_input = Mathf.Clamp(angleToTarget / 45f, -1f, 1f);
+
+            FB_input = Mathf.Clamp01(1f - Mathf.Abs(angleToTarget) / 45f);
+            LR_input = 0f;
+        } else
+        {
+            FB_input = 0f; 
+            LR_input = 0f; 
+            rotation_input = 0f;
+        }
+
+        // check if we are close enough to the waypoint to then move to the next one
+        if (toTarget.magnitude <= waypoint_tolerance)
+        {
+            NextWaypoint();
+        }
+
+    }
+
+    private void NextWaypoint()
+    {
+        if (waypoints == null || waypoints.Count == 0) return; 
+
+        if (current_waypoint_index < waypoints.Count - 1)
+        {
+            current_waypoint_index++;
+        } else if (loop_waypoints)
+        {
+            current_waypoint_index = 0;
+        }
+    }
+
     void Update()
     {
         // reset the values when re-entering the update
@@ -78,7 +153,13 @@ public class BeginnerDroneController : MonoBehaviour
         LR_input = 0f;
         rotation_input = 0f;
 
-        HandleInputs();
+        if (flight_mode == 0)
+        {
+            HandleInputs();
+        } else if (flight_mode == 1)
+        {
+            HandleWaypoint();
+        }
     }
 
     void FixedUpdate()
