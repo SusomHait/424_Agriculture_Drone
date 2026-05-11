@@ -9,9 +9,15 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: 93bd23387aa3c7c41b1ae9b77a4abe8a
   - enabled: 1
+    path: Assets/Scenes/ImageLibrary.unity
+    guid: ea9e93698c0ff414587bd92e4dd98391
+  - enabled: 1
     path: Assets/Scenes/RowsPlot.unity
     guid: 41f0816b85084e64899d71fc0d5464a4
   - enabled: 1
+    path: Assets/Scenes/CornCrops.unity
+    guid: d9f45091832bf904cafe7f91eb593511
+  - enabled: 0
     path: Assets/Scenes/BasicPlot.unity
     guid: 49535030ba7d2f64ea1d9916bb34915d
   m_configObjects:

@@ -36,6 +36,8 @@ public class ImageCapture : MonoBehaviour
             capture_btn.interactable = false;
             StartCoroutine(AutomaticCapture());
         }
+
+        Debug.Log(Application.persistentDataPath);
     }
 
     public void TakeImage()
@@ -61,7 +63,14 @@ public class ImageCapture : MonoBehaviour
         RenderTexture.active = currentRT;
 
         byte[] bytes = image.EncodeToPNG();
-        string path = Application.dataPath + "/Images/" + System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png";
+        string folder = Path.Combine(Application.persistentDataPath, "Images");
+
+        if (!Directory.Exists(folder))
+        {
+            Directory.CreateDirectory(folder);
+        }
+        
+        string path = Path.Combine(folder, System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png");
 
         File.WriteAllBytes(path, bytes);
 

@@ -67,8 +67,7 @@ public class MenuManager : MonoBehaviour
     Dictionary<int, string> sceneMap = new Dictionary<int, string>()
     {
         { 0, "RowsPlot" },
-        { 1, "BoxPlot" },
-        { 2, "SpiralPlot" }
+        { 1, "CornCrops" },
     };
 
     // start the survey
@@ -80,6 +79,11 @@ public class MenuManager : MonoBehaviour
         {
             SceneManager.LoadScene(sceneName);
         }
+    }
+
+    public void openImgLib()
+    {
+        SceneManager.LoadScene("ImageLibrary");
     }
 
     // disable the buttons when a menu is open or renable them when closed
